@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const process_controller_1 = require("../controllers/process.controller");
+const processRoutes = (0, express_1.Router)();
+const processController = new process_controller_1.ProcessController();
+processRoutes.post('/', processController.create);
+processRoutes.get('/', processController.list);
+processRoutes.patch('/:id/status', processController.updateStatus);
+exports.default = processRoutes;

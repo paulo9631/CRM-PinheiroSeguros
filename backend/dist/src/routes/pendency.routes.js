@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const pendency_controller_1 = require("../controllers/pendency.controller");
+const pendencyRoutes = (0, express_1.Router)();
+const pendencyController = new pendency_controller_1.PendencyController();
+pendencyRoutes.post('/', pendencyController.create);
+pendencyRoutes.get('/', pendencyController.listOpen);
+pendencyRoutes.patch('/:id/resolve', pendencyController.resolve);
+exports.default = pendencyRoutes;

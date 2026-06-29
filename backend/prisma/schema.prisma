@@ -7,7 +7,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -54,6 +53,7 @@ model Client {
   email      String?
   birth_date DateTime?
   address    String?
+  gov_password String?   // Senha do INSS/Gov.br (Apenas string de acesso)
   
   created_by String
   user       User      @relation(fields: [created_by], references: [id])
@@ -70,9 +70,12 @@ model Process {
   client       Client          @relation(fields: [client_id], references: [id])
   
   category     ProcessCategory
-  service_type String          // ex: "Aposentadoria", "Seguro de Vida"
+  service_type String          // ex: "Aposentadoria", "Seguro de Vida", "GUIA INDIVIDUAL"
   status       ProcessStatus   @default(TRIAGEM)
   description  String?
+  observations String?
+  accident_date DateTime?
+  re_registration_date DateTime?
   
   pendencies   Pendency[]
   
