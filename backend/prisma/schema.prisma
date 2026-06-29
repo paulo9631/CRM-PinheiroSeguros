@@ -1,0 +1,96 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  AGENT
+}
+
+enum ProcessCategory {
+  PREVIDENCIARIO
+  SEGURO
+}
+
+enum ProcessStatus {
+  TRIAGEM
+  ANALISE_DOCUMENTOS
+  PERICIA
+  AGUARDANDO_RESPOSTA
+  CONCLUIDO
+  CANCELADO
+}
+
+enum PendencyStatus {
+  OPEN
+  RESOLVED
+}
+
+model User {
+  id            String     @id @default(uuid())
+  name          String
+  email         String     @unique
+  password_hash String
+  role          Role       @default(AGENT)
+  created_at    DateTime   @default(now())
+  
+  clients       Client[]
+  pendencies    Pendency[]
+}
+
+model Client {
+  id         String    @id @default(uuid())
+  full_name  String
+  cpf        String    @unique
+  phone      String
+  email      String?
+  birth_date DateTime?
+  address    String?
+  
+  created_by String
+  user       User      @relation(fields: [created_by], references: [id])
+  
+  processes  Process[]
+  
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+}
+
+model Process {
+  id           String          @id @default(uuid())
+  client_id    String
+  client       Client          @relation(fields: [client_id], references: [id])
+  
+  category     ProcessCategory
+  service_type String          // ex: "Aposentadoria", "Seguro de Vida"
+  status       ProcessStatus   @default(TRIAGEM)
+  description  String?
+  
+  pendencies   Pendency[]
+  
+  created_at   DateTime        @default(now())
+  updated_at   DateTime        @updatedAt
+}
+
+model Pendency {
+  id          String         @id @default(uuid())
+  process_id  String
+  process     Process        @relation(fields: [process_id], references: [id])
+  
+  assigned_to String
+  user        User           @relation(fields: [assigned_to], references: [id])
+  
+  description String
+  status      PendencyStatus @default(OPEN)
+  
+  created_at  DateTime       @default(now())
+  resolved_at DateTime?
+}
