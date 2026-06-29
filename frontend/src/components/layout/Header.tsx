@@ -1,7 +1,21 @@
 import React from 'react';
-import { Search, Bell, Menu } from 'lucide-react';
+import { Search, Bell, Menu, LogOut } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export function Header() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const initials = user?.name 
+    ? user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() 
+    : '??';
+
   return (
     <header className="h-16 bg-white dark:bg-[#024873] border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6 sticky top-0 z-10 glass">
       
@@ -32,14 +46,22 @@ export function Header() {
         </button>
 
         {/* User Profile */}
-        <div className="flex items-center">
+        <div className="flex items-center border-l border-gray-200 dark:border-gray-700 pl-4 ml-4">
           <div className="h-9 w-9 rounded-full bg-primary flex items-center justify-center text-white font-medium shadow-sm">
-            VP
+            {initials}
           </div>
           <div className="ml-3 hidden md:block">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Valcélio Pinheiro</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Corretor</p>
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{user?.name || 'Carregando...'}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{user?.role === 'ADMIN' ? 'Administrador' : 'Corretor'}</p>
           </div>
+          
+          <button 
+            onClick={handleLogout}
+            className="ml-4 p-2 text-gray-400 hover:text-red-500 transition-colors rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
+            title="Sair"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
         </div>
       </div>
     </header>

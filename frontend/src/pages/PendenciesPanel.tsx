@@ -2,34 +2,39 @@ import React from 'react';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Filter, Plus, CheckCircle2, AlertCircle } from 'lucide-react';
+import { PendencyModal } from '../features/pendencies/components/PendencyModal';
 
 export function PendenciesPanel() {
-  const pendencies = [
-    {
-      id: 1,
-      client: 'João da Silva',
-      processType: 'Auxílio-Doença (INSS)',
-      description: 'Falta laudo médico atualizado (últimos 3 meses)',
-      status: 'pendencia' as const,
-      date: '28/06/2026',
-    },
-    {
-      id: 2,
-      client: 'Maria Oliveira',
-      processType: 'Seguro de Vida',
-      description: 'Aguardando assinatura da apólice',
-      status: 'em-andamento' as const,
-      date: '27/06/2026',
-    },
-    {
-      id: 3,
-      client: 'Carlos Eduardo',
-      processType: 'Aposentadoria',
-      description: 'Enviar cópia do PPP assinada pela empresa',
-      status: 'pendencia' as const,
-      date: '29/06/2026',
+  const [pendencies, setPendencies] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+
+  const fetchPendencies = async () => {
+    try {
+      setLoading(true);
+      const { api } = await import('../services/api');
+      const response = await api.get('/pendencies');
+      setPendencies(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar pendências', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  React.useEffect(() => {
+    fetchPendencies();
+  }, []);
+
+  const handleResolve = async (id: string) => {
+    try {
+      const { api } = await import('../services/api');
+      await api.patch(`/pendencies/${id}/resolve`);
+      fetchPendencies();
+    } catch (error) {
+      console.error('Erro ao resolver pendência', error);
+    }
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -45,7 +50,7 @@ export function PendenciesPanel() {
           <Button variant="outline" icon={Filter}>
             Filtrar
           </Button>
-          <Button variant="primary" icon={Plus}>
+          <Button variant="primary" icon={Plus} onClick={() => setIsModalOpen(true)}>
             Nova Pendência
           </Button>
         </div>
@@ -74,16 +79,28 @@ export function PendenciesPanel() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-card-dark divide-y divide-gray-200 dark:divide-gray-700">
-              {pendencies.map((pendency) => (
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                    Carregando pendências...
+                  </td>
+                </tr>
+              ) : pendencies.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                    Nenhuma pendência em aberto! 🎉
+                  </td>
+                </tr>
+              ) : pendencies.map((pendency) => (
                 <tr key={pendency.id} className="table-row-hover">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div>
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {pendency.client}
+                          {pendency.process?.client?.full_name || 'Cliente Desconhecido'}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {pendency.processType}
+                          {pendency.process?.service_type || 'Processo'}
                         </div>
                       </div>
                     </div>
@@ -92,56 +109,33 @@ export function PendenciesPanel() {
                     <div className="text-sm text-gray-900 dark:text-gray-200">{pendency.description}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500 dark:text-gray-400">{pendency.date}</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {new Date(pendency.created_at).toLocaleDateString()}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <Badge status={pendency.status}>
-                      {pendency.status === 'pendencia' ? 'Pendente' : 'Em Andamento'}
-                    </Badge>
+                    <Badge status="pendencia">Pendente</Badge>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <Button variant="ghost" size="sm" className="text-secondary dark:text-secondary-dark mr-2">
                       Ver
                     </Button>
-                    <Button variant="outline" size="sm" className="text-status-success-text border-status-success-bg hover:bg-status-success-bg">
+                    <Button variant="outline" size="sm" onClick={() => handleResolve(pendency.id)} className="text-status-success-text border-status-success-bg hover:bg-status-success-bg">
                       <CheckCircle2 className="w-4 h-4 mr-1" /> Resolver
                     </Button>
                   </td>
                 </tr>
               ))}
-              
-              {/* Exemplo de Pendência Resolvida para demonstração de badge */}
-              <tr className="table-row-hover opacity-75">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">Ana Santos</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">Aposentadoria</div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="text-sm text-gray-500 dark:text-gray-400 line-through">Entregar cópia do RG autenticada</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">25/06/2026</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <Badge status="concluido">Resolvida</Badge>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right">
-                  <span className="text-sm text-gray-400">Finalizada</span>
-                </td>
-              </tr>
             </tbody>
           </table>
         </div>
-        
-        {/* Pagination placeholder */}
-        <div className="bg-white dark:bg-card-dark px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between sm:px-6">
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            Mostrando <span className="font-medium">1</span> a <span className="font-medium">4</span> de <span className="font-medium">12</span> resultados
-          </div>
-          <div className="flex space-x-2">
-            <Button variant="outline" size="sm" disabled>Anterior</Button>
-            <Button variant="outline" size="sm">Próximo</Button>
-          </div>
-        </div>
       </div>
+
+      <PendencyModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSuccess={fetchPendencies} 
+      />
     </div>
   );
 }

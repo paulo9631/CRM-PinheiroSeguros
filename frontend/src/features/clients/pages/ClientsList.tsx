@@ -1,13 +1,29 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../../../components/ui/Button';
 import { Plus, Search, MoreVertical, FileText } from 'lucide-react';
+import { api } from '../../../services/api';
+import { ClientModal } from '../components/ClientModal';
 
 export function ClientsList() {
-  const clients = [
-    { id: 1, name: 'João da Silva', cpf: '111.222.333-44', email: 'joao@email.com', phone: '(88) 99999-1111', status: 'Ativo' },
-    { id: 2, name: 'Maria Oliveira', cpf: '555.666.777-88', email: 'maria@email.com', phone: '(88) 98888-2222', status: 'Ativo' },
-    { id: 3, name: 'Carlos Eduardo', cpf: '999.000.111-22', email: 'carlos@email.com', phone: '(88) 97777-3333', status: 'Inativo' },
-  ];
+  const [clients, setClients] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const fetchClients = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/clients');
+      setClients(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar clientes', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchClients();
+  }, []);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -17,7 +33,7 @@ export function ClientsList() {
           <p className="text-gray-500 dark:text-gray-400 mt-1">Gerencie os clientes da corretora e seus processos.</p>
         </div>
         <div className="mt-4 sm:mt-0">
-          <Button variant="primary" icon={Plus}>
+          <Button variant="primary" icon={Plus} onClick={() => setIsModalOpen(true)}>
             Novo Cliente
           </Button>
         </div>
@@ -58,41 +74,61 @@ export function ClientsList() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-card-dark divide-y divide-gray-200 dark:divide-gray-700">
-              {clients.map((client) => (
-                <tr key={client.id} className="table-row-hover">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="h-10 w-10 flex-shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                        {client.name.charAt(0)}
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {client.name}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900 dark:text-gray-200">{client.cpf}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900 dark:text-gray-200">{client.phone}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">{client.email}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <Button variant="ghost" size="sm" className="text-secondary dark:text-secondary-dark mr-2">
-                      <FileText className="w-4 h-4 mr-1" /> Processos
-                    </Button>
-                    <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                      <MoreVertical className="w-5 h-5" />
-                    </button>
+              {loading ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                    Carregando clientes...
                   </td>
                 </tr>
-              ))}
+              ) : clients.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                    Nenhum cliente cadastrado ainda.
+                  </td>
+                </tr>
+              ) : (
+                clients.map((client) => (
+                  <tr key={client.id} className="table-row-hover">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 flex-shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                          {client.full_name?.charAt(0)}
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">
+                            {client.full_name}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-gray-200">{client.cpf}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 dark:text-gray-200">{client.phone}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">{client.email || '-'}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <Button variant="ghost" size="sm" className="text-secondary dark:text-secondary-dark mr-2">
+                        <FileText className="w-4 h-4 mr-1" /> Processos
+                      </Button>
+                      <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <MoreVertical className="w-5 h-5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
+      <ClientModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSuccess={fetchClients} 
+      />
     </div>
   );
 }
