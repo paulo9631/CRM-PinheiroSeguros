@@ -21,6 +21,10 @@ app.get('/', (req, res) => {
   res.json({ message: 'API CRM Pinheiro Seguros is running!' });
 });
 
-app.listen(port, () => {
-  console.log(`🚀 Server running on port ${port}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(port, () => {
+    console.log(`🚀 Server running on port ${port}`);
+  });
+}
+
+export default app;

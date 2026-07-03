@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": "https://crm-pinheiro-seguros-back.vercel.app/"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
