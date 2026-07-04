@@ -10,7 +10,7 @@ authRoutes.post('/login', authController.login);
 // Apenas Admin pode criar usuários
 authRoutes.post('/register', authMiddleware, adminMiddleware, authController.register);
 
-// Listar todos os usuários
-authRoutes.get('/users', authMiddleware, adminMiddleware, authController.listUsers);
+// Listar todos os usuários (todos podem ver para poder atribuir pendências)
+authRoutes.get('/users', authMiddleware, authController.listUsers);
 
 export default authRoutes;

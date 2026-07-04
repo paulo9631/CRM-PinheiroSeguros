@@ -2,7 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from '../components/layout/AppLayout';
 import { ProtectedRoute } from '../components/layout/ProtectedRoute';
 import { PendenciesPanel } from '../pages/PendenciesPanel';
-import { ClientsList } from '../features/clients/pages/ClientsList';
+import { ClientsPage } from '../pages/ClientsPage';
 import { ProcessList } from '../features/processes/pages/ProcessList';
 import { UsersPanel } from '../features/users/pages/UsersPanel';
 import { Dashboard } from '../pages/Dashboard';
@@ -36,7 +36,7 @@ export const router = createBrowserRouter([
           },
           {
             path: '/clientes',
-            element: <ClientsList />,
+            element: <ClientsPage />,
           },
           {
             path: '/processos',

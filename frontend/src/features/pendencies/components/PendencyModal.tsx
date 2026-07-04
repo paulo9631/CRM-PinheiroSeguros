@@ -13,9 +13,11 @@ export function PendencyModal({ isOpen, onClose, onSuccess }: PendencyModalProps
   const [formData, setFormData] = useState({
     process_id: '',
     description: '',
+    assigned_to: '',
   });
   
   const [processes, setProcesses] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -24,6 +26,10 @@ export function PendencyModal({ isOpen, onClose, onSuccess }: PendencyModalProps
       api.get('/processes')
         .then(res => setProcesses(res.data))
         .catch(err => console.error("Failed to load processes", err));
+        
+      api.get('/auth/users')
+        .then(res => setUsers(res.data))
+        .catch(err => console.error("Failed to load users", err));
     }
   }, [isOpen]);
 
@@ -42,7 +48,7 @@ export function PendencyModal({ isOpen, onClose, onSuccess }: PendencyModalProps
       await api.post('/pendencies', formData);
       onSuccess();
       onClose();
-      setFormData({ process_id: '', description: '' });
+      setFormData({ process_id: '', description: '', assigned_to: '' });
     } catch (err: any) {
       setError(err.response?.data?.error || 'Erro ao criar pendência');
     } finally {
@@ -96,6 +102,23 @@ export function PendencyModal({ isOpen, onClose, onSuccess }: PendencyModalProps
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:border-transparent dark:text-white"
               placeholder="Ex: Falta RG, Aguardando assinatura..."
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Atribuir a (Opcional)</label>
+            <select
+              name="assigned_to"
+              value={formData.assigned_to}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:border-transparent dark:text-white"
+            >
+              <option value="">Atribuir a mim mesmo</option>
+              {users.map(u => (
+                <option key={u.id} value={u.id}>
+                  {u.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="pt-4 flex justify-end space-x-3 border-t border-gray-100 dark:border-gray-800 mt-6">
